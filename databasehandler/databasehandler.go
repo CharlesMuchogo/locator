@@ -2,7 +2,9 @@ package databasehandler
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/joho/godotenv"
+	"main.go/myStructs"
 	"os"
 )
 
@@ -47,4 +49,25 @@ func SaveUser(firstName string, middleName string, email string, firebase_id str
 
 	return int(rowsaffected), nil
 
+}
+
+func Login(email string, password string) (myStructs.User, error) {
+	var data myStructs.User
+
+	loginQuery := fmt.Sprintf("SELECT first_name, middle_name, email, phone_number FROM users WHERE email = '%v'", email)
+	fmt.Printf("login querry is: %s \n", loginQuery)
+
+	rows, err := DbConnect().Query(loginQuery)
+
+	if err != nil {
+		fmt.Printf("login querry is: %s \n", err.Error())
+		return data, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&data.First_name, &data.Middle_name, &data.Email, &data.Phone_number)
+		CheckError(err)
+	}
+
+	return data, nil
 }
