@@ -19,6 +19,6 @@ func main() {
 	public.POST("/location", location.UpdateLocation)
 	public.GET("/location", location.GetLocation)
 
-	r.Run(":8000")
+	r.Run(":8001")
 	fmt.Println("Server started on port 8080")
 }
