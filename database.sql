@@ -13,13 +13,16 @@ create table users(
     primary key (id)
 )
 
+
+
 create table distance(
     user_id int,
-                         current_latitude double precision,
-                         current_longitude double precision,
-                         max_distance double precision,
-                         current_latitude double precision,
-                         current_longitude double precision,
+    current_latitude double precision,
+    current_longitude double precision,
+    max_distance double precision,
+    current_latitude double precision,
+    current_longitude double precision,
+    latest_update timestamp default CURRENT_TIMESTAMP,
 
     primary key (user_id),
 
