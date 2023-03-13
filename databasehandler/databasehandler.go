@@ -6,6 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	"main.go/myStructs"
 	"os"
+	"time"
 )
 
 func goDotEnvVariable(key string) string {
@@ -72,7 +73,7 @@ func SaveUser(firstName string, middleName string, email string, firebase_id str
 func Login(email string, password []byte) (myStructs.User, error) {
 	var data myStructs.User
 
-	loginQuery := fmt.Sprintf("SELECT id, first_name, middle_name, email, phone_number FROM users WHERE email = '%v'  ", email)
+	loginQuery := fmt.Sprintf("SELECT  id, first_name, middle_name, email, phone_number, password FROM users WHERE email = '%v'  ", email)
 	fmt.Printf("login querry is: %s \n", loginQuery)
 
 	rows, err := DbConnect().Query(loginQuery)
@@ -83,7 +84,7 @@ func Login(email string, password []byte) (myStructs.User, error) {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&data.UserId, &data.First_name, &data.Middle_name, &data.Email, &data.Phone_number)
+		err = rows.Scan(&data.UserId, &data.First_name, &data.Middle_name, &data.Email, &data.Phone_number, &data.Password)
 		CheckError(err)
 	}
 
@@ -94,8 +95,9 @@ func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis str
 
 	status := 500
 	dbRResponse := "failed to update location"
-	loginQuery := fmt.Sprintf("Update distance set current_latitude = '%v', current_longitude = '%v', max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v' WHERE user_id = '%v'", cur_lat, curr_lng, max_dis, orig_lat, orig_lng, user_id)
-	fmt.Printf("login querry is: %s \n", loginQuery)
+	loginQuery := fmt.Sprintf("Update distance set current_latitude = '%v', current_longitude = '%v', max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v', latest_update = '%v'  WHERE user_id = '%v'", cur_lat, curr_lng, max_dis, orig_lat, orig_lng, user_id, time.Now())
+	fmt.Printf("update  querry is: %s \n", loginQuery)
+	fmt.Printf("the time now is is: %s \n", time.Now())
 
 	rows, err := DbConnect().Exec(loginQuery)
 
@@ -156,7 +158,7 @@ func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
 		err = rows.Scan(&currentUser.UserId, &currentUser.CurrentLatitude, &currentUser.CurrentLongitude, &currentUser.MaxDistance, &currentUser.OriginLatitude, &currentUser.OriginLongitude, &currentUser.LastUpdate)
 		fmt.Printf("longitude and time querry is: %s    %s\n", currentUser.CurrentLatitude, currentUser.LastUpdate)
 
-		loginQuery := fmt.Sprintf("SELECT first_name, middle_name, email, phone_number FROM users WHERE id = '%v'", currentUser.UserId)
+		loginQuery := fmt.Sprintf("SELECT first_name, middle_name, phone_number, email FROM users WHERE id = '%v'", currentUser.UserId)
 		fmt.Printf("login querry is: %s \n", loginQuery)
 
 		userrows, dberr := DbConnect().Query(loginQuery)

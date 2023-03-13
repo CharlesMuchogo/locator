@@ -21,6 +21,10 @@ func BeforeSave(password string) ([]byte, error) {
 	return hashedPassword, nil
 }
 
+func VerifyPassword(password, hashedPassword string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
 func Register(c *gin.Context) {
 	var input myStructs.User
 
@@ -70,10 +74,16 @@ func Login(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	} else if user.UserId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Incorrect credentials"})
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "login success",
-			"user":    user})
+		if VerifyPassword(loginData.Password, user.Password) != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Incorrect credentials"})
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"message": "login success",
+				"user":    user})
+		}
 	}
 
 }
