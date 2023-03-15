@@ -95,7 +95,7 @@ func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis str
 
 	status := 500
 	dbRResponse := "failed to update location"
-	loginQuery := fmt.Sprintf("Update distance set current_latitude = '%v', current_longitude = '%v', max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v', latest_update = '%v'  WHERE user_id = '%v'", cur_lat, curr_lng, max_dis, orig_lat, orig_lng, user_id, time.Now())
+	loginQuery := fmt.Sprintf("Update distance set current_latitude = '%v', current_longitude = '%v', max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v', latest_update = '%v'  WHERE user_id = '%v'", cur_lat, curr_lng, max_dis, orig_lat, orig_lng, user_id, time.Now().Format("2006-01-02T15:04:05.999999Z"))
 	fmt.Printf("update  querry is: %s \n", loginQuery)
 	fmt.Printf("the time now is is: %s \n", time.Now())
 
