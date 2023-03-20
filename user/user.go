@@ -2,11 +2,12 @@ package user
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"main.go/databasehandler"
 	"main.go/myStructs"
-	"net/http"
 )
 
 func BeforeSave(password string) ([]byte, error) {
@@ -60,6 +61,32 @@ func Register(c *gin.Context) {
 
 }
 
+func UpdateProfile(c *gin.Context) {
+
+	var user myStructs.User
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		fmt.Printf("error: %s \n ", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	status, response := databasehandler.UpdateProfile(user.Profile_photo, user.UserId)
+
+	userData, getdetailsErr := databasehandler.Login(user.Email)
+	if getdetailsErr != nil {
+		fmt.Printf("error: %s \n ", getdetailsErr.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Server error"})
+		return
+	}
+
+	if status == 200 {
+		c.JSON(http.StatusOK, gin.H{"message": response, "user": userData})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"message": response})
+	}
+}
+
 func Login(c *gin.Context) {
 	var loginData myStructs.LoginData
 	if err := c.ShouldBindJSON(&loginData); err != nil {
@@ -69,8 +96,7 @@ func Login(c *gin.Context) {
 	}
 
 	fmt.Printf("error: %s \n ", loginData.Firebase_id)
-	password, err := BeforeSave(loginData.Password)
-	user, err := databasehandler.Login(loginData.Email, password)
+	user, err := databasehandler.Login(loginData.Email)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})

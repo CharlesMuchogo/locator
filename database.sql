@@ -10,8 +10,13 @@ create table users(
     password text not null,
     firebase_id text,
 
+
     primary key (id)
 )
+
+ALTER TABLE users
+ADD COLUMN profile_photo TEXT DEFAULT 'https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png';
+
 
 
 

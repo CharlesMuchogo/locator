@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"time"
+
 	"main.go/location"
 	"main.go/user"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -20,6 +21,7 @@ func main() {
 	public.POST("/login", user.Login)
 	public.POST("/location", location.UpdateLocation)
 	public.GET("/location", location.GetLocation)
+	public.POST("/user", user.UpdateProfile)
 
 	r.Run(":8001")
 	fmt.Println("Server started on port 8080")

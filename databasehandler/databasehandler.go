@@ -3,10 +3,11 @@ package databasehandler
 import (
 	"database/sql"
 	"fmt"
-	"github.com/joho/godotenv"
-	"main.go/myStructs"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
+	"main.go/myStructs"
 )
 
 func goDotEnvVariable(key string) string {
@@ -53,11 +54,10 @@ func SaveUser(firstName string, middleName string, email string, firebase_id str
 	if affectederr != nil {
 		return userDetails, status, err
 	}
-	fmt.Printf("rows affcted %s", affected)
 
 	if affected > 0 {
 		var loginError error = nil
-		userDetails, loginError = Login(email, password)
+		userDetails, loginError = Login(email)
 
 		if loginError != nil {
 			return userDetails, status, loginError
@@ -70,10 +70,10 @@ func SaveUser(firstName string, middleName string, email string, firebase_id str
 
 }
 
-func Login(email string, password []byte) (myStructs.User, error) {
+func Login(email string) (myStructs.User, error) {
 	var data myStructs.User
 
-	loginQuery := fmt.Sprintf("SELECT  id, first_name, middle_name, email, phone_number, password FROM users WHERE email = '%v'  ", email)
+	loginQuery := fmt.Sprintf("SELECT  id, first_name, middle_name, email, phone_number, password, profile_photo  FROM users WHERE email = '%v'  ", email)
 	fmt.Printf("login querry is: %s \n", loginQuery)
 
 	rows, err := DbConnect().Query(loginQuery)
@@ -84,7 +84,7 @@ func Login(email string, password []byte) (myStructs.User, error) {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&data.UserId, &data.First_name, &data.Middle_name, &data.Email, &data.Phone_number, &data.Password)
+		err = rows.Scan(&data.UserId, &data.First_name, &data.Middle_name, &data.Email, &data.Phone_number, &data.Password, &data.Profile_photo)
 		CheckError(err)
 	}
 
@@ -142,9 +142,33 @@ func addLocationuser_id(user_id string, cur_lat string, curr_lng string, max_dis
 	return status, dbRResponse
 }
 
+func UpdateProfile(image string, id string) (int, string) {
+	status := 500
+	dbRResponse := "failed to update profile"
+
+	profileQuery := "UPDATE users SET profile_photo = $1 WHERE id = $2"
+	fmt.Printf("update  querry is: %s \n", profileQuery)
+
+	rows, err := DbConnect().Exec(profileQuery, image, id)
+
+	if err != nil {
+		fmt.Printf("update profile error is: %s \n", err.Error())
+		return status, err.Error()
+	}
+	rowsAffected, err := rows.RowsAffected()
+	CheckError(err)
+
+	if rowsAffected > 0 {
+		status = 200
+		dbRResponse = "update profile successfully"
+	}
+
+	return status, dbRResponse
+}
+
 func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
 
-	query := "SELECT user_id, current_latitude, current_longitude, max_distance, origin_latitude, origin_longitude, latest_update FROM distance;"
+	query := "SELECT  u.first_name,     u.middle_name, u.phone_number,u.email, u.id, d.current_latitude, d.current_longitude,d.max_distance,d.origin_latitude,d.origin_longitude,d.latest_update FROM users u INNER JOIN distance d ON  u.id = d.user_id;"
 	rows, err := DbConnect().Query(query)
 	defer DbConnect().Close()
 	CheckError(err)
@@ -155,22 +179,12 @@ func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
 	var userSlice []myStructs.LocationUpdate
 
 	for rows.Next() {
-		err = rows.Scan(&currentUser.UserId, &currentUser.CurrentLatitude, &currentUser.CurrentLongitude, &currentUser.MaxDistance, &currentUser.OriginLatitude, &currentUser.OriginLongitude, &currentUser.LastUpdate)
-		fmt.Printf("longitude and time querry is: %s    %s\n", currentUser.CurrentLatitude, currentUser.LastUpdate)
+		err = rows.Scan(&currentUser.FirstName, &currentUser.MiddleName, &currentUser.PhoneNumber, &currentUser.Email, &currentUser.UserId, &currentUser.CurrentLatitude, &currentUser.CurrentLongitude, &currentUser.MaxDistance, &currentUser.OriginLatitude, &currentUser.OriginLongitude, &currentUser.LastUpdate)
+		CheckError(err)
 
-		loginQuery := fmt.Sprintf("SELECT first_name, middle_name, phone_number, email FROM users WHERE id = '%v'", currentUser.UserId)
-		fmt.Printf("login querry is: %s \n", loginQuery)
-
-		userrows, dberr := DbConnect().Query(loginQuery)
-		CheckError(dberr)
-		for userrows.Next() {
-			usrerr := userrows.Scan(&currentUser.FirstName, &currentUser.MiddleName, &currentUser.PhoneNumber, &currentUser.Email)
-			CheckError(usrerr)
-			userSlice = append(userSlice, currentUser)
-			CheckError(err)
-
-			response = 200
-		}
+		fmt.Printf("update  querry is: %s \n", currentUser.FirstName)
+		userSlice = append(userSlice, currentUser)
+		response = 200
 
 	}
 

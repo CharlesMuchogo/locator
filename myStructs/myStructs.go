@@ -3,13 +3,14 @@ package myStructs
 import "time"
 
 type User struct {
-	UserId       string `json:"id" `
-	Email        string `json:"email" binding:"required"`
-	First_name   string `json:"first_name" binding:"required"`
-	Middle_name  string `json:"middle_name" binding:"required"`
-	Phone_number string `json:"phone_number" binding:"required"`
-	Firebase_id  string `json:"firebase_id,omitempty" binding:"required"`
-	Password     string `json:"password,omitempty" binding:"required"`
+	UserId        string `json:"id" `
+	Email         string `json:"email" binding:"required"`
+	First_name    string `json:"first_name" binding:"required"`
+	Middle_name   string `json:"middle_name" binding:"required"`
+	Phone_number  string `json:"phone_number" binding:"required"`
+	Firebase_id   string `json:"firebase_id,omitempty" `
+	Password      string `json:"-" `
+	Profile_photo string `json:"profile_photo,omitempty"`
 }
 
 type LoginData struct {
