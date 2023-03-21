@@ -10,7 +10,7 @@ import (
 	"main.go/myStructs"
 )
 
-func goDotEnvVariable(key string) string {
+func GoDotEnvVariable(key string) string {
 
 	// load .env file
 	err := godotenv.Load(".env")
@@ -21,7 +21,7 @@ func goDotEnvVariable(key string) string {
 }
 
 func DbConnect() *sql.DB {
-	dsn := goDotEnvVariable("DATABASEURL")
+	dsn := GoDotEnvVariable("DATABASEURL")
 
 	db, err := sql.Open("postgres", dsn)
 
@@ -94,7 +94,7 @@ func Login(email string) (myStructs.User, error) {
 func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis string, orig_lat string, orig_lng string) (int, string) {
 
 	status := 500
-	dbRResponse := "failed to update location"
+	dbRResponse := "failed to update location" 
 	loginQuery := fmt.Sprintf("Update distance set current_latitude = '%v', current_longitude = '%v', max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v', latest_update = CURRENT_TIMESTAMP  WHERE user_id = '%v'", cur_lat, curr_lng, max_dis, orig_lat, orig_lng, user_id)
 	fmt.Printf("update  querry is: %s \n", loginQuery)
 	fmt.Printf("the time now is is: %s \n", time.Now())
@@ -189,4 +189,41 @@ func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
 	}
 
 	return userSlice, response
+}
+
+func GetFcmDetails(id string)  (bool, string, string) {
+
+	query := "SELECT d.notification_sent, u.first_name, u.middle_name FROM distance d INNER JOIN users u ON d.user_id = u.id WHERE u.id = $1"
+	
+	fmt.Printf("update  querry is: %s \n", query)
+
+	rows, err := DbConnect().Query(query, id)
+	CheckError(err)
+
+	var fcmModel myStructs.FcmModel
+
+	for rows.Next(){
+		err = rows.Scan(&fcmModel.IsNotificationSent, &fcmModel.FirstName, &fcmModel.LastName)
+		CheckError(err)
+	}
+
+	notificationsent := fcmModel.IsNotificationSent
+	firstName := fcmModel.FirstName
+	lastName := fcmModel.LastName
+
+	return notificationsent, firstName, lastName
+
+}
+func UpdateNotificationSent(id string, notification_sent bool ) {
+	notificationQuery := "UPDATE distance SET notification_sent = $1 WHERE user_id = $2"
+	fmt.Printf("update  querry is: %s \n", notificationQuery)
+
+	rows, err := DbConnect().Exec(notificationQuery, notification_sent, id)
+
+	rowsAffected, err := rows.RowsAffected()
+	CheckError(err)
+
+	if rowsAffected > 0 {
+		fmt.Printf("notification updated successfully \n \n")
+	}
 }

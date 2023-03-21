@@ -3,24 +3,16 @@ package location
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
-	"github.com/NaySoftware/go-fcm"
 	"github.com/gin-gonic/gin"
 	"main.go/databasehandler"
+	"main.go/fcm"
 	"main.go/myStructs"
-)
-
-const (
-	serverKey = "AAAAUxlnNFg:APA91bHqvt-A-ujXVg_N40DLacfkn6heZoBDI3o_1bPp1hxDX30TXSb5zsTrySc87FdmuTtx2gv-ajf3o2fRs4t7cgGlJDtRX1ampl-c5YwlYlO-tik9wFiRHKD7J4UiNCnpz0Nid7vW"
-	topic     = "fJpRUcuBT72VAUepVdPNio:APA91bHETvO-aGmJo7xKDMLvRyHNHdlqemqN9wDicD9KqpkxmYdUBL5KgPX50Ki0qhiskTlpdMzcP4BFMjgCD82s7eceupe0wk1ATw1RNTTVhFBJKPA2Ro3XWHAlaBkzPMX2TwvQYmS7vz"
 )
 
 func UpdateLocation(c *gin.Context) {
 	var location myStructs.LocationUpdate
-
-	fcm := fcm.NewFcmClient(serverKey)
-
-	fcm.NewFcmMsgTo(topic, "new message")
 
 	if err := c.ShouldBindJSON(&location); err != nil {
 		fmt.Printf("error: %s \n ", err.Error())
@@ -28,7 +20,13 @@ func UpdateLocation(c *gin.Context) {
 		return
 	}
 
-	status, response := databasehandler.UpdateLocation(location.UserId, location.CurrentLatitude, location.CurrentLongitude, location.MaxDistance, location.OriginLatitude, location.OriginLongitude)
+	fmt.Printf("current distance from origin is: %f \n ", location.User_distance)
+
+	set_radius, _ := strconv.ParseFloat(location.MaxDistance, 32)
+
+	go handleNotifications(location.UserId, location.User_distance, float32(set_radius))
+
+	status, response := databasehandler.UpdateLocation(location.UserId, location.CurrentLatitude, location.CurrentLongitude, location.MaxDistance, location.OriginLatitude, location.OriginLatitude)
 
 	devices, devicesStatus := databasehandler.GetUsersLocation()
 
@@ -47,11 +45,6 @@ func GetLocation(c *gin.Context) {
 
 	userLocation, status := databasehandler.GetUsersLocation()
 
-	fcm := fcm.NewFcmClient(serverKey)
-	fmt.Printf(" should be sending the message now \n")
-
-	fcm.NewFcmMsgTo(topic, "new message")
-
 	if status == 200 {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "get devices location success",
@@ -61,5 +54,21 @@ func GetLocation(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "server error",
 		})
+	}
+}
+
+func handleNotifications(user_id string, user_distance float32, max_distance float32) {
+
+	if user_distance > max_distance {
+		IsNotificationSent, firstName, middleName := databasehandler.GetFcmDetails(user_id)
+
+		if IsNotificationSent != true {
+			fcm.SendNotification(firstName, middleName)
+			databasehandler.UpdateNotificationSent(user_id, true)
+
+		}
+
+	} else {
+		databasehandler.UpdateNotificationSent(user_id, false)
 	}
 }

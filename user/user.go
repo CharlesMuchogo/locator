@@ -15,10 +15,6 @@ func BeforeSave(password string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	//remove spaces in username
-	//u.Username = .EscapeString(strings.TrimSpace(u.Username))
-
 	return hashedPassword, nil
 }
 

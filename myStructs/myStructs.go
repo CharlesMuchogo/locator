@@ -19,16 +19,26 @@ type LoginData struct {
 	Firebase_id string `json:"firebase_id" binding:"required"`
 }
 
-type LocationUpdate struct {
-	CurrentLatitude  string    `json:"current_latitude" binding:"required"`
-	CurrentLongitude string    `json:"current_longitude" binding:"required"`
-	UserId           string    `json:"user_id" binding:"required"`
-	OriginLatitude   string    `json:"origin_latitude" binding:"required"`
-	OriginLongitude  string    `json:"origin_longitude" binding:"required"`
-	MaxDistance      string    `json:"max_distance" binding:"required"`
-	LastUpdate       time.Time `json:"time" `
-	Email            string    `json:"email" `
-	FirstName        string    `json:"first_name" `
-	MiddleName       string    `json:"middle_name" `
-	PhoneNumber      string    `json:"phone_number"`
+type FcmModel struct{
+	FirstName string
+	LastName string
+	IsNotificationSent bool
 }
+
+type LocationUpdate struct {
+	User_distance     float32   `json:"user_distance" binding:"required"`
+	Notification_sent string    `json:"notification_sent" `
+	CurrentLatitude   string    `json:"current_latitude" binding:"required"`
+	CurrentLongitude  string    `json:"current_longitude" binding:"required"`
+	UserId            string    `json:"user_id" binding:"required"`
+	OriginLatitude    string    `json:"origin_latitude" binding:"required"`
+	OriginLongitude   string    `json:"origin_longitude" binding:"required"`
+	MaxDistance       string    `json:"max_distance" binding:"required"`
+	LastUpdate        time.Time `json:"time" `
+	Email             string    `json:"email" `
+	FirstName         string    `json:"first_name" `
+	MiddleName        string    `json:"middle_name" `
+	PhoneNumber       string    `json:"phone_number"`
+}
+
+
