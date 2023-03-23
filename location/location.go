@@ -3,7 +3,7 @@ package location
 import (
 	"fmt"
 	"net/http"
-	"strconv"
+	//"strconv"
 
 	"github.com/gin-gonic/gin"
 	"main.go/databasehandler"
@@ -22,11 +22,10 @@ func UpdateLocation(c *gin.Context) {
 
 	fmt.Printf("current distance from origin is: %f \n ", location.User_distance)
 
-	set_radius, _ := strconv.ParseFloat(location.MaxDistance, 32)
+	//max_distance, _ := strconv.ParseFloat(location.MaxDistance, 32)
+	//go handleNotifications(location.UserId, location.User_distance, float32(max_distance))
 
-	go handleNotifications(location.UserId, location.User_distance, float32(set_radius))
-
-	status, response := databasehandler.UpdateLocation(location.UserId, location.CurrentLatitude, location.CurrentLongitude, location.MaxDistance, location.OriginLatitude, location.OriginLatitude)
+	status, response := databasehandler.UpdateLocation(location.UserId, location.CurrentLatitude, location.CurrentLongitude, location.MaxDistance, location.OriginLatitude, location.OriginLongitude, location.User_distance)
 
 	devices, devicesStatus := databasehandler.GetUsersLocation()
 

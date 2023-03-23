@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/joho/godotenv"
 	"main.go/myStructs"
@@ -91,13 +90,18 @@ func Login(email string) (myStructs.User, error) {
 	return data, nil
 }
 
-func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis string, orig_lat string, orig_lng string) (int, string) {
+func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis string, orig_lat string, orig_lng string, user_distance float32) (int, string) {
+	var loginQuery string
+
+	if cur_lat == "" && curr_lng == "" {
+		loginQuery = fmt.Sprintf("Update distance set max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v', latest_update = CURRENT_TIMESTAMP  WHERE user_id = '%v'", max_dis, orig_lat, orig_lng, user_id)
+	} else {
+		loginQuery = fmt.Sprintf("Update distance set current_latitude = '%v', current_longitude = '%v', latest_update = CURRENT_TIMESTAMP, user_distance = '%v'  WHERE user_id = '%v'", cur_lat, curr_lng, user_distance, user_id)
+	}
 
 	status := 500
-	dbRResponse := "failed to update location" 
-	loginQuery := fmt.Sprintf("Update distance set current_latitude = '%v', current_longitude = '%v', max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v', latest_update = CURRENT_TIMESTAMP  WHERE user_id = '%v'", cur_lat, curr_lng, max_dis, orig_lat, orig_lng, user_id)
+	dbRResponse := "failed to update location"
 	fmt.Printf("update  querry is: %s \n", loginQuery)
-	fmt.Printf("the time now is is: %s \n", time.Now())
 
 	rows, err := DbConnect().Exec(loginQuery)
 
@@ -168,7 +172,7 @@ func UpdateProfile(image string, id string) (int, string) {
 
 func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
 
-	query := "SELECT  u.first_name,     u.middle_name, u.phone_number,u.email, u.id, d.current_latitude, d.current_longitude,d.max_distance,d.origin_latitude,d.origin_longitude,d.latest_update FROM users u INNER JOIN distance d ON  u.id = d.user_id;"
+	query := "SELECT  u.first_name,     u.middle_name, u.phone_number,u.email, u.id, d.user_distance, d.current_latitude, d.current_longitude,d.max_distance,d.origin_latitude,d.origin_longitude,d.latest_update FROM users u INNER JOIN distance d ON  u.id = d.user_id;"
 	rows, err := DbConnect().Query(query)
 	defer DbConnect().Close()
 	CheckError(err)
@@ -179,7 +183,7 @@ func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
 	var userSlice []myStructs.LocationUpdate
 
 	for rows.Next() {
-		err = rows.Scan(&currentUser.FirstName, &currentUser.MiddleName, &currentUser.PhoneNumber, &currentUser.Email, &currentUser.UserId, &currentUser.CurrentLatitude, &currentUser.CurrentLongitude, &currentUser.MaxDistance, &currentUser.OriginLatitude, &currentUser.OriginLongitude, &currentUser.LastUpdate)
+		err = rows.Scan(&currentUser.FirstName, &currentUser.MiddleName, &currentUser.PhoneNumber, &currentUser.Email, &currentUser.UserId, &currentUser.User_distance, &currentUser.CurrentLatitude, &currentUser.CurrentLongitude, &currentUser.MaxDistance, &currentUser.OriginLatitude, &currentUser.OriginLongitude, &currentUser.LastUpdate)
 		CheckError(err)
 
 		fmt.Printf("update  querry is: %s \n", currentUser.FirstName)
@@ -191,10 +195,10 @@ func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
 	return userSlice, response
 }
 
-func GetFcmDetails(id string)  (bool, string, string) {
+func GetFcmDetails(id string) (bool, string, string) {
 
 	query := "SELECT d.notification_sent, u.first_name, u.middle_name FROM distance d INNER JOIN users u ON d.user_id = u.id WHERE u.id = $1"
-	
+
 	fmt.Printf("update  querry is: %s \n", query)
 
 	rows, err := DbConnect().Query(query, id)
@@ -202,7 +206,7 @@ func GetFcmDetails(id string)  (bool, string, string) {
 
 	var fcmModel myStructs.FcmModel
 
-	for rows.Next(){
+	for rows.Next() {
 		err = rows.Scan(&fcmModel.IsNotificationSent, &fcmModel.FirstName, &fcmModel.LastName)
 		CheckError(err)
 	}
@@ -214,7 +218,7 @@ func GetFcmDetails(id string)  (bool, string, string) {
 	return notificationsent, firstName, lastName
 
 }
-func UpdateNotificationSent(id string, notification_sent bool ) {
+func UpdateNotificationSent(id string, notification_sent bool) {
 	notificationQuery := "UPDATE distance SET notification_sent = $1 WHERE user_id = $2"
 	fmt.Printf("update  querry is: %s \n", notificationQuery)
 
