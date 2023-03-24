@@ -36,7 +36,6 @@ func CheckError(err error) {
 
 func SaveUser(firstName string, middleName string, email string, firebase_id string, phoneNumber string, password []byte) (myStructs.User, int, error) {
 	userUrl := "INSERT INTO users(first_name,middle_name, email, phone_number, password, firebase_id) VALUES($1, $2, $3, $4, $5, $6)"
-
 	status := 500
 
 	var userDetails myStructs.User
@@ -72,7 +71,7 @@ func SaveUser(firstName string, middleName string, email string, firebase_id str
 func Login(email string) (myStructs.User, error) {
 	var data myStructs.User
 
-	loginQuery := fmt.Sprintf("SELECT  id, first_name, middle_name, email, phone_number, password, profile_photo  FROM users WHERE email = '%v'  ", email)
+	loginQuery := fmt.Sprintf("SELECT  id, is_admin, first_name, middle_name, email, phone_number, password, profile_photo  FROM users WHERE email = '%v'  ", email)
 	fmt.Printf("login querry is: %s \n", loginQuery)
 
 	rows, err := DbConnect().Query(loginQuery)
@@ -83,7 +82,7 @@ func Login(email string) (myStructs.User, error) {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&data.UserId, &data.First_name, &data.Middle_name, &data.Email, &data.Phone_number, &data.Password, &data.Profile_photo)
+		err = rows.Scan(&data.UserId, &data.Is_admin, &data.First_name, &data.Middle_name, &data.Email, &data.Phone_number, &data.Password, &data.Profile_photo)
 		CheckError(err)
 	}
 
@@ -120,6 +119,31 @@ func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis str
 	}
 
 	return status, dbRResponse
+}
+
+func GetUserLocationDetails(user_id string)(int, myStructs.MyLocation){
+	status := 500
+	var myLocation myStructs.MyLocation
+	query := "SELECT max_distance, origin_latitude, origin_longitude from distance where user_id = $1"
+
+	fmt.Printf("login querry is: %s \n", query)
+
+	rows, err := DbConnect().Query(query, user_id)
+	if err != nil {
+		fmt.Printf("get location error is: %s \n", err.Error())
+		return status, myLocation
+	}
+
+	
+
+	for rows.Next() {
+        err = rows.Scan(&myLocation.MaxDistance, &myLocation.OriginLatitude, &myLocation.OriginLongitude)
+        CheckError(err)
+		status = 200
+		
+    }
+
+	return status, myLocation
 }
 
 func addLocationuser_id(user_id string, cur_lat string, curr_lng string, max_dis string, orig_lat string, orig_lng string) (int, string) {

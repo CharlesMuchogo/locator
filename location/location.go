@@ -27,14 +27,19 @@ func UpdateLocation(c *gin.Context) {
 
 	status, response := databasehandler.UpdateLocation(location.UserId, location.CurrentLatitude, location.CurrentLongitude, location.MaxDistance, location.OriginLatitude, location.OriginLongitude, location.User_distance)
 
+	getUserLocation, mylocation :=  databasehandler.GetUserLocationDetails(location.UserId);
+
 	devices, devicesStatus := databasehandler.GetUsersLocation()
 
 	if devicesStatus == 200 {
-		if status == 200 {
-			c.JSON(http.StatusOK, gin.H{"message": response, "users": devices})
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"message": response})
+		if getUserLocation == 200 {
+			if status == 200 {
+				c.JSON(http.StatusOK, gin.H{"message": response, "users": devices, "you": mylocation })
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"message": response})
+			}
 		}
+		
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "server error"})
 	}
@@ -62,7 +67,7 @@ func handleNotifications(user_id string, user_distance float32, max_distance flo
 		IsNotificationSent, firstName, middleName := databasehandler.GetFcmDetails(user_id)
 
 		if IsNotificationSent != true {
-			fcm.SendNotification(firstName, middleName)
+			fcm.SendNotification( user_id, firstName, middleName)
 			databasehandler.UpdateNotificationSent(user_id, true)
 
 		}

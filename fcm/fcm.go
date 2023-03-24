@@ -9,13 +9,13 @@ import (
 	"main.go/databasehandler"
 )
 
-func SendNotification(firstName string, middleName string) {
+func SendNotification( user_id string, firstName string, middleName string) {
 	sendbody := fmt.Sprintf("%v %v is out of the location radius set", firstName, middleName)
 	url := "https://fcm.googleapis.com/fcm/send"
 	fmt.Println("URL:>", url)
 
 	jsonStr := fmt.Sprintf(`{
-		"to": "/topics/location",
+		"to": "/topics/%v",
 		"notification": {
 		  "body": "%v",
 		  "OrganizationId": "2",
@@ -31,7 +31,7 @@ func SendNotification(firstName string, middleName string) {
 		  "bodyText": "New Announcement assigned",
 		  "organization": "Elementary school"
 		}
-	}`, sendbody)
+	}`,user_id, sendbody)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(jsonStr)))
 	req.Header.Set("Authorization", databasehandler.GoDotEnvVariable("FCMSERVERKEY"))

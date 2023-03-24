@@ -11,7 +11,7 @@ type User struct {
 	Firebase_id   string `json:"firebase_id,omitempty" `
 	Password      string `json:"-" `
 	Profile_photo string `json:"profile_photo,omitempty"`
-	Is_admin  string `json:"is_admin" `
+	Is_admin      bool   `json:"is_admin" `
 }
 
 type LoginData struct {
@@ -24,6 +24,11 @@ type FcmModel struct {
 	FirstName          string
 	LastName           string
 	IsNotificationSent bool
+}
+type MyLocation struct {
+	OriginLatitude    string    `json:"origin_latitude" `
+	OriginLongitude   string    `json:"origin_longitude"`
+	MaxDistance       string    `json:"max_distance" `
 }
 
 type LocationUpdate struct {
