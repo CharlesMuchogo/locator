@@ -15,9 +15,9 @@ type User struct {
 }
 
 type LoginData struct {
-	Email       string `json:"email" binding:"required"`
-	Password    string `json:"Password" binding:"required"`
-	Firebase_id string `json:"firebase_id" binding:"required"`
+	Email       string `json:"email" `
+	Password    string `json:"Password" `
+	Firebase_id string `json:"firebase_id" `
 }
 
 type FcmModel struct {
@@ -39,7 +39,7 @@ type LocationUpdate struct {
 	UserId            string    `json:"user_id" `
 	OriginLatitude    string    `json:"origin_latitude" `
 	OriginLongitude   string    `json:"origin_longitude"`
-	MaxDistance       string    `json:"max_distance" `
+	MaxDistance       float32    `json:"max_distance" `
 	LastUpdate        time.Time `json:"time" `
 	Email             string    `json:"email" `
 	FirstName         string    `json:"first_name" `

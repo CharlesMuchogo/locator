@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"main.go/databasehandler"
 	"main.go/myStructs"
+	"main.go/sendmail"
 )
 
 func BeforeSave(password string) ([]byte, error) {
@@ -108,4 +109,41 @@ func Login(c *gin.Context) {
 		}
 	}
 
+}
+
+func RequestPromotion(c *gin.Context) {
+	var requestDetails myStructs.LoginData
+	if err := c.ShouldBindJSON(&requestDetails); err != nil {
+		fmt.Printf("error: %s \n ", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	user, err := databasehandler.Login(requestDetails.Email)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	} else if user.UserId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "User not found"})
+	} else {
+		go sendmail.SendMail("charles5muchogo@gmail.com", user)
+		c.JSON(http.StatusOK, gin.H{"message": "request sent successfully"})
+	}
+
+}
+
+func PromoteUser(c *gin.Context) {
+	id := c.Query("id")
+	fmt.Printf("userid is updated successfully %s  \n", id)
+
+	requestStatus := databasehandler.PromoteUser(id, true)
+	fmt.Printf("userid is updated successfully %d  \n", requestStatus)
+
+	if requestStatus == 200 {
+
+		c.JSON(http.StatusOK, gin.H{"message": "User has been promoted to admin successfully"})
+
+	} else {
+		c.JSON(http.StatusOK, gin.H{"message": "could not promote user"})
+
+	}
 }

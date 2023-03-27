@@ -35,3 +35,11 @@ create table distance(
         FOREIGN KEY(user_id)
             REFERENCES product(id)
 )
+user1
+test2
+test3
+new
+fahim
+test
+charles
+Hussnain

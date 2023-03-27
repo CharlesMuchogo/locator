@@ -39,7 +39,6 @@ func SaveUser(firstName string, middleName string, email string, firebase_id str
 	status := 500
 
 	var userDetails myStructs.User
-	//var loginError error
 
 	insertUser, err := DbConnect().Exec(userUrl, firstName, middleName, email, phoneNumber, password, firebase_id)
 	defer DbConnect().Close()
@@ -121,7 +120,7 @@ func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis str
 	return status, dbRResponse
 }
 
-func GetUserLocationDetails(user_id string)(int, myStructs.MyLocation){
+func GetUserLocationDetails(user_id string) (int, myStructs.MyLocation) {
 	status := 500
 	var myLocation myStructs.MyLocation
 	query := "SELECT max_distance, origin_latitude, origin_longitude from distance where user_id = $1"
@@ -134,14 +133,14 @@ func GetUserLocationDetails(user_id string)(int, myStructs.MyLocation){
 		return status, myLocation
 	}
 
-	
-
 	for rows.Next() {
-        err = rows.Scan(&myLocation.MaxDistance, &myLocation.OriginLatitude, &myLocation.OriginLongitude)
-        CheckError(err)
+		err = rows.Scan(&myLocation.MaxDistance, &myLocation.OriginLatitude, &myLocation.OriginLongitude)
+		fmt.Printf("latitude is: %s \n", myLocation.OriginLatitude)
+		fmt.Printf("longitude is: %s \n", myLocation.OriginLongitude)
+		CheckError(err)
 		status = 200
-		
-    }
+
+	}
 
 	return status, myLocation
 }
@@ -192,6 +191,31 @@ func UpdateProfile(image string, id string) (int, string) {
 	}
 
 	return status, dbRResponse
+}
+func PromoteUser(user_id string, status bool) (resultStatus int) {
+	requestStatus := 500
+	query := "UPDATE users SET is_admin = $1 WHERE id = $2"
+
+	fmt.Printf("update  querry is: %s \n", query)
+
+	rows, err := DbConnect().Exec(query, status, user_id)
+
+	if err != nil {
+		fmt.Printf("update profile error is: %s \n", err.Error())
+		return requestStatus
+	}
+	rowsAffected, err := rows.RowsAffected()
+	if err != nil {
+		fmt.Printf("update profile error is: %s \n", err.Error())
+		return requestStatus
+	}
+
+	if rowsAffected > 0 {
+		requestStatus = 200
+
+	}
+
+	return requestStatus
 }
 
 func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
