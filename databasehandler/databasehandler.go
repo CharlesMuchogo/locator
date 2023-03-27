@@ -91,15 +91,23 @@ func Login(email string) (myStructs.User, error) {
 func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis string, orig_lat string, orig_lng string, user_distance float32) (int, string) {
 	var loginQuery string
 
-	if cur_lat == "" && curr_lng == "" {
-		loginQuery = fmt.Sprintf("Update distance set max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v', latest_update = CURRENT_TIMESTAMP  WHERE user_id = '%v'", max_dis, orig_lat, orig_lng, user_id)
-	} else {
+	if cur_lat == "" && curr_lng == "" && orig_lat != "0.0" && orig_lng != "0.0" {
+		fmt.Printf("if 1: \n")
+		loginQuery = fmt.Sprintf("Update distance set max_distance = '%v', origin_latitude = '%v', origin_longitude = '%v', notification_sent = '%v', latest_update = CURRENT_TIMESTAMP  WHERE user_id = '%v'", max_dis, orig_lat, orig_lng, false, user_id)
+	}
+
+	if cur_lat != "" && curr_lng != "" && orig_lat != "0.0" && orig_lng != "0.0" {
+		fmt.Printf("if 2: \n")
 		loginQuery = fmt.Sprintf("Update distance set current_latitude = '%v', current_longitude = '%v', latest_update = CURRENT_TIMESTAMP, user_distance = '%v'  WHERE user_id = '%v'", cur_lat, curr_lng, user_distance, user_id)
+	}
+	if cur_lat == "" && curr_lng == "" && orig_lat == "0.0" && orig_lng == "0.0" {
+		fmt.Printf("here ---------------------------------------------> 3: \n")
+		loginQuery = fmt.Sprintf("Update distance set max_distance = '%v', notification_sent = '%v', latest_update = CURRENT_TIMESTAMP  WHERE user_id = '%v'", max_dis, false, user_id)
 	}
 
 	status := 500
 	dbRResponse := "failed to update location"
-	fmt.Printf("update  querry is: %s \n", loginQuery)
+	fmt.Printf("update  querry is: ---------------------------------------------> %s \n", loginQuery)
 
 	rows, err := DbConnect().Exec(loginQuery)
 
@@ -112,7 +120,7 @@ func UpdateLocation(user_id string, cur_lat string, curr_lng string, max_dis str
 
 	if rows_affected > 0 {
 		status = 200
-		dbRResponse = " update location successfully"
+		dbRResponse = "update location successfully"
 	} else {
 		status, dbRResponse = addLocationuser_id(user_id, cur_lat, curr_lng, max_dis, orig_lat, orig_lng)
 	}
@@ -149,10 +157,10 @@ func addLocationuser_id(user_id string, cur_lat string, curr_lng string, max_dis
 	status := 500
 	dbRResponse := "failed to update location"
 
-	locationQuery := "INSERT INTO distance( user_id, current_latitude, current_longitude, max_distance, origin_latitude, origin_longitude )VALUES ($1, $2, $3, $4, $5, $6)"
+	locationQuery := "INSERT INTO distance( user_id, current_latitude, current_longitude, max_distance, origin_latitude, origin_longitude, user_distance )VALUES ($1, $2, $3, $4, $5, $6 ,$7)"
 	fmt.Printf("insert querry is: %s \n", locationQuery)
 
-	rows, err := DbConnect().Exec(locationQuery, user_id, cur_lat, curr_lng, max_dis, orig_lat, orig_lng)
+	rows, err := DbConnect().Exec(locationQuery, user_id, cur_lat, curr_lng, 10.0, cur_lat, curr_lng, 0.00)
 
 	if err != nil {
 		fmt.Printf("login querry is: %s \n", err.Error())

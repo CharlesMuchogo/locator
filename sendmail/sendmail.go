@@ -11,7 +11,7 @@ import (
 func SendMail(recipient string, user myStructs.User) {
 	from := "muchpaul2@gmail.com"
 	password := "ykynxuelmugnzpat"
-	to := recipient
+	to := databasehandler.GoDotEnvVariable("APROVAL_ADMIN_EMAIL") 
 
 	link := fmt.Sprintf("%s%s",databasehandler.GoDotEnvVariable("ACCEPT_REQUEST_LINK"),user.UserId ) 
 	sendBody := fmt.Sprintf("%v %v requests to be admin.\n Click  <a href=\"%v\">here</a> to accept the request ", user.First_name, user.Middle_name, link)
