@@ -9,8 +9,8 @@ import (
 )
 
 func SendMail(recipient string, user myStructs.User) {
-	from := "muchpaul2@gmail.com"
-	password := "ykynxuelmugnzpat"
+	from := databasehandler.GoDotEnvVariable("SENDER_EMAIL")
+	password := databasehandler.GoDotEnvVariable("SENDER_EMAIL_PASSWORD")
 	to := databasehandler.GoDotEnvVariable("APROVAL_ADMIN_EMAIL") 
 
 	link := fmt.Sprintf("%s%s",databasehandler.GoDotEnvVariable("ACCEPT_REQUEST_LINK"),user.UserId ) 
