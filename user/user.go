@@ -97,7 +97,6 @@ func encryptPassword(password string) (string, error) {
     }
     return string(hashedPassword), nil
 }
-
 func Signup(c *gin.Context) {
     db, err := InitDB()
     if err != nil {
@@ -110,6 +109,11 @@ func Signup(c *gin.Context) {
     if err := c.ShouldBindJSON(&user); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
+    }
+
+    // Assign a default profile photo if none was provided
+    if user.Profile_photo == "" {
+        user.Profile_photo = "https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png"
     }
 
     hashedPassword, err := encryptPassword(user.Password)
@@ -125,8 +129,9 @@ func Signup(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, user)
+    c.JSON(http.StatusOK, gin.H{"user": user, "message":"signup success"})
 }
+
 
 func Login(c *gin.Context) {
     db, err := InitDB()
@@ -153,5 +158,5 @@ func Login(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, user)
+    c.JSON(http.StatusOK,gin.H{"user": user, "message":"login success"})
 }
