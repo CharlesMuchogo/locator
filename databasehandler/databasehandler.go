@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 	"main.go/myStructs"
 )
 
@@ -33,14 +34,23 @@ func CheckError(err error) {
 		panic(err.Error())
 	}
 }
+func BeforeSave(password string) ([]byte, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	return hashedPassword, nil
+}
 
-func SaveUser(firstName string, middleName string, email string, firebase_id string, phoneNumber string, password []byte) (myStructs.User, int, error) {
-	userUrl := "INSERT INTO users(first_name,middle_name, email, phone_number, password, firebase_id) VALUES($1, $2, $3, $4, $5, $6)"
+
+func SaveUser(firstName string, middleName string, email string, firebase_id string, phoneNumber string, password string) (myStructs.User, int, error) {
+	userUrl := "INSERT INTO my_users(first_name,middle_name, email, phone_number, firebase_id , password) VALUES($1, $2, $3, $4, $5, $6)"
 	status := 500
 
 	var userDetails myStructs.User
 
-	insertUser, err := DbConnect().Exec(userUrl, firstName, middleName, email, phoneNumber, password, firebase_id)
+	mypassword, _ := BeforeSave(password)
+	insertUser, err := DbConnect().Exec(userUrl, firstName, middleName, email, phoneNumber, firebase_id, mypassword)
 	defer DbConnect().Close()
 	if err != nil {
 		return userDetails, status, err
@@ -70,7 +80,7 @@ func SaveUser(firstName string, middleName string, email string, firebase_id str
 func Login(email string) (myStructs.User, error) {
 	var data myStructs.User
 
-	loginQuery := fmt.Sprintf("SELECT  id, is_admin, first_name, middle_name, email, phone_number, password, profile_photo  FROM users WHERE email = '%v'  ", email)
+	loginQuery := fmt.Sprintf("SELECT  id, is_admin, first_name, middle_name, email, phone_number, password, profile_photo  FROM my_users WHERE email = '%v'  ", email)
 	fmt.Printf("login querry is: %s \n", loginQuery)
 
 	rows, err := DbConnect().Query(loginQuery)
@@ -81,7 +91,7 @@ func Login(email string) (myStructs.User, error) {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&data.UserId, &data.Is_admin, &data.First_name, &data.Middle_name, &data.Email, &data.Phone_number, &data.Password, &data.Profile_photo)
+		err = rows.Scan(&data.Id, &data.Is_admin, &data.First_name, &data.Middle_name, &data.Email, &data.Phone_number, &data.Password, &data.Profile_photo)
 		CheckError(err)
 	}
 
@@ -177,7 +187,7 @@ func addLocationuser_id(user_id string, cur_lat string, curr_lng string, max_dis
 	return status, dbRResponse
 }
 
-func UpdateProfile(image string, id string) (int, string) {
+func UpdateProfile(image string, id int) (int, string) {
 	status := 500
 	dbRResponse := "failed to update profile"
 

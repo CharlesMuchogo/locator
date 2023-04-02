@@ -1,14 +1,16 @@
 
 
-create table users(
+create table my_users(
     id INT GENERATED ALWAYS AS IDENTITY,
     email varchar(50) unique  not null,
     date_created timestamp default CURRENT_TIMESTAMP,
-    first_name varchar(50) unique  not null,
+    first_name varchar(50),
     middle_name varchar(50) ,
     phone_number varchar(50),
     password text not null,
     firebase_id text,
+    is_admin bool default false,
+    profile_photo text default "https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png",
 
 
     primary key (id)

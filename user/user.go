@@ -5,58 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"golang.org/x/crypto/bcrypt"
 	"main.go/databasehandler"
 	"main.go/myStructs"
 	"main.go/sendmail"
 )
-
-func BeforeSave(password string) ([]byte, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-	return hashedPassword, nil
-}
-
-func VerifyPassword(password, hashedPassword string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-}
-
-func Register(c *gin.Context) {
-	var input myStructs.User
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-
-	password, er := BeforeSave(input.Password)
-
-	fmt.Printf(" input email address: %s \n ", input.Email)
-	fmt.Printf(" input first name: %s \n ", input.First_name)
-
-	if er != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": er.Error(),
-		})
-		return
-	}
-
-	user, status, err := databasehandler.SaveUser(input.First_name, input.Middle_name, input.Email, input.Firebase_id, input.Phone_number, password)
-
-	if status != 200 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Registration successful",
-			"user":    user,
-		})
-	}
-
-}
 
 func UpdateProfile(c *gin.Context) {
 
@@ -68,7 +23,7 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	status, response := databasehandler.UpdateProfile(user.Profile_photo, user.UserId)
+	status, response := databasehandler.UpdateProfile(user.Profile_photo, user.Id)
 
 	userData, getdetailsErr := databasehandler.Login(user.Email)
 	if getdetailsErr != nil {
@@ -84,32 +39,6 @@ func UpdateProfile(c *gin.Context) {
 	}
 }
 
-func Login(c *gin.Context) {
-	var loginData myStructs.LoginData
-	if err := c.ShouldBindJSON(&loginData); err != nil {
-		fmt.Printf("error: %s \n ", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-
-	fmt.Printf("error: %s \n ", loginData.Firebase_id)
-	user, err := databasehandler.Login(loginData.Email)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-	} else if user.UserId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Incorrect credentials"})
-	} else {
-		if VerifyPassword(loginData.Password, user.Password) != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Incorrect credentials"})
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"message": "login success",
-				"user":    user})
-		}
-	}
-
-}
 
 func RequestPromotion(c *gin.Context) {
 	var requestDetails myStructs.LoginData
@@ -122,7 +51,7 @@ func RequestPromotion(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-	} else if user.UserId == "" {
+	} else if user.Email == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "User not found"})
 	} else {
 		go sendmail.SendMail("charles5muchogo@gmail.com", user)
@@ -146,4 +75,83 @@ func PromoteUser(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "could not promote user"})
 
 	}
+}
+
+type DB struct {
+    *gorm.DB
+}
+
+func InitDB() (*DB, error) {
+    db, err := gorm.Open("postgres", databasehandler.GoDotEnvVariable("DATABASEURL"))
+    if err != nil {
+        return nil, err
+    }
+    db.AutoMigrate(&myStructs.User{})
+    return &DB{db}, nil
+}
+
+func encryptPassword(password string) (string, error) {
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+    if err != nil {
+        return "", err
+    }
+    return string(hashedPassword), nil
+}
+
+func Signup(c *gin.Context) {
+    db, err := InitDB()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    defer db.Close()
+
+    var user myStructs.User
+    if err := c.ShouldBindJSON(&user); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    hashedPassword, err := encryptPassword(user.Password)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    user.Password = hashedPassword
+
+    if err := db.Create(&user).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, user)
+}
+
+func Login(c *gin.Context) {
+    db, err := InitDB()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    defer db.Close()
+
+    var loginUser myStructs.LoginUser
+    if err := c.ShouldBindJSON(&loginUser); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    var user myStructs.User
+    if err := db.Where("email = ?", loginUser.Email).First(&user).Error; err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+        return
+    }
+
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password)); err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+        return
+    }
+
+    c.JSON(http.StatusOK, user)
 }

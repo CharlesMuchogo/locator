@@ -17,7 +17,7 @@ func main() {
 	fmt.Printf("time now is %s \n", time.Now())
 	r := gin.Default()
 	public := r.Group("/api")
-	public.POST("/register", user.Register)
+	public.POST("/register", user.Signup)
 	public.POST("/login", user.Login)
 	public.POST("/location", location.UpdateLocation)
 	public.GET("/location", location.GetLocation)
@@ -28,4 +28,6 @@ func main() {
 
 	r.Run(":8001")
 	fmt.Println("Server started on port 8080")
+
+	
 }

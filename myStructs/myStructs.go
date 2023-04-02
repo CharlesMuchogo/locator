@@ -3,7 +3,7 @@ package myStructs
 import "time"
 
 type User struct {
-	UserId        string `json:"id" `
+	Id        int `json:"id" gorm:"primaryKey"`
 	Email         string `json:"email" binding:"required"`
 	First_name    string `json:"first_name" binding:"required"`
 	Middle_name   string `json:"middle_name" binding:"required"`
@@ -13,6 +13,15 @@ type User struct {
 	Profile_photo string `json:"profile_photo,omitempty"`
 	Is_admin      bool   `json:"is_admin" `
 }
+
+type LoginUser struct {
+	Email         string `json:"email" binding:"required"`
+
+	Password      string `json:"-" `
+	
+}
+
+
 
 type LoginData struct {
 	Email       string `json:"email" `
