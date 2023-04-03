@@ -44,7 +44,7 @@ func BeforeSave(password string) ([]byte, error) {
 
 
 func SaveUser(firstName string, middleName string, email string, firebase_id string, phoneNumber string, password string) (myStructs.User, int, error) {
-	userUrl := "INSERT INTO my_users(first_name,middle_name, email, phone_number, firebase_id , password) VALUES($1, $2, $3, $4, $5, $6)"
+	userUrl := "INSERT INTO users(first_name,middle_name, email, phone_number, firebase_id , password) VALUES($1, $2, $3, $4, $5, $6)"
 	status := 500
 
 	var userDetails myStructs.User
@@ -80,7 +80,7 @@ func SaveUser(firstName string, middleName string, email string, firebase_id str
 func Login(email string) (myStructs.User, error) {
 	var data myStructs.User
 
-	loginQuery := fmt.Sprintf("SELECT  id, is_admin, first_name, middle_name, email, phone_number, password, profile_photo  FROM my_users WHERE email = '%v'  ", email)
+	loginQuery := fmt.Sprintf("SELECT  id, is_admin, first_name, middle_name, email, phone_number, password, profile_photo  FROM users WHERE email = '%v'  ", email)
 	fmt.Printf("login querry is: %s \n", loginQuery)
 
 	rows, err := DbConnect().Query(loginQuery)

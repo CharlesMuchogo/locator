@@ -3,6 +3,7 @@ package sendmail
 import (
 	"fmt"
 	"net/smtp"
+	"strconv"
 
 	"main.go/databasehandler"
 	"main.go/myStructs"
@@ -13,7 +14,7 @@ func SendMail(recipient string, user myStructs.User) {
 	password := databasehandler.GoDotEnvVariable("SENDER_EMAIL_PASSWORD")
 	to := databasehandler.GoDotEnvVariable("APROVAL_ADMIN_EMAIL") 
 
-	link := fmt.Sprintf("%s%s",databasehandler.GoDotEnvVariable("ACCEPT_REQUEST_LINK"),user.Id ) 
+	link := databasehandler.GoDotEnvVariable("ACCEPT_REQUEST_LINK") + strconv.Itoa(user.Id) 
 	sendBody := fmt.Sprintf("%v %v requests to be admin.\n Click  <a href=\"%v\">here</a> to accept the request ", user.First_name, user.Middle_name, link)
 
 	msg := []byte(fmt.Sprintf("To: %s\r\n", to) +
