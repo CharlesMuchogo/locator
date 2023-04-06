@@ -147,11 +147,16 @@ func Login(c *gin.Context) {
         return
     }
 
+    fmt.Printf("userid is updated successfully %s  \n", loginUser)
+
+
     var user myStructs.User
     if err := db.Where("email = ?", loginUser.Email).First(&user).Error; err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
         return
     }
+    fmt.Printf("userid is updated successfully %s  \n", user)
+
 
     if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password)); err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
