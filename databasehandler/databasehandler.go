@@ -42,7 +42,6 @@ func BeforeSave(password string) ([]byte, error) {
 	return hashedPassword, nil
 }
 
-
 func SaveUser(firstName string, middleName string, email string, firebase_id string, phoneNumber string, password string) (myStructs.User, int, error) {
 	userUrl := "INSERT INTO users(first_name,middle_name, email, phone_number, firebase_id , password) VALUES($1, $2, $3, $4, $5, $6)"
 	status := 500
@@ -238,7 +237,7 @@ func PromoteUser(user_id string, status bool) (resultStatus int) {
 
 func GetUsersLocation() ([]myStructs.LocationUpdate, int) {
 
-	query := "SELECT  u.first_name,     u.middle_name, u.phone_number,u.email, u.id, d.user_distance, d.current_latitude, d.current_longitude,d.max_distance,d.origin_latitude,d.origin_longitude,d.latest_update FROM users u INNER JOIN distance d ON  u.id = d.user_id;"
+	query := "SELECT  u.first_name, u.middle_name, u.phone_number,u.email, u.id, d.user_distance, d.current_latitude, d.current_longitude,d.max_distance,d.origin_latitude,d.origin_longitude,d.latest_update FROM users u INNER JOIN distance d ON  u.id = d.user_id  ORDER BY u.id ASC;"
 	rows, err := DbConnect().Query(query)
 	defer DbConnect().Close()
 	CheckError(err)

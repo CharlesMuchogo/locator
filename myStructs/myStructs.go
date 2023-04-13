@@ -3,7 +3,7 @@ package myStructs
 import "time"
 
 type User struct {
-	Id        int `json:"id" gorm:"primaryKey"`
+	Id            int    `json:"id" gorm:"primaryKey"`
 	Email         string `json:"email" binding:"required"`
 	First_name    string `json:"first_name" binding:"required"`
 	Middle_name   string `json:"middle_name" binding:"required"`
@@ -15,13 +15,10 @@ type User struct {
 }
 
 type LoginUser struct {
-	Email         string `json:"email" binding:"required"`
+	Email string `json:"email" binding:"required"`
 
-	Password      string `json:"-" `
-	
+	Password string `json:"-" `
 }
-
-
 
 type LoginData struct {
 	Email       string `json:"email" `
@@ -35,23 +32,23 @@ type FcmModel struct {
 	IsNotificationSent bool
 }
 type MyLocation struct {
-	OriginLatitude    string    `json:"origin_latitude" `
-	OriginLongitude   string    `json:"origin_longitude"`
-	MaxDistance       string    `json:"max_distance" `
+	OriginLatitude  string `json:"origin_latitude" `
+	OriginLongitude string `json:"origin_longitude"`
+	MaxDistance     string `json:"max_distance" `
 }
 
 type LocationUpdate struct {
+	Email             string    `json:"email" `
+	FirstName         string    `json:"first_name" `
+	MiddleName        string    `json:"middle_name" `
+	PhoneNumber       string    `json:"phone_number"`
 	User_distance     float32   `json:"user_distance"`
-	Notification_sent string    `json:"notification_sent" `
+	Notification_sent bool      `json:"-" `
 	CurrentLatitude   string    `json:"current_latitude" `
 	CurrentLongitude  string    `json:"current_longitude" `
 	UserId            string    `json:"user_id" `
 	OriginLatitude    string    `json:"origin_latitude" `
 	OriginLongitude   string    `json:"origin_longitude"`
-	MaxDistance       float32    `json:"max_distance" `
+	MaxDistance       float32   `json:"max_distance" `
 	LastUpdate        time.Time `json:"time" `
-	Email             string    `json:"email" `
-	FirstName         string    `json:"first_name" `
-	MiddleName        string    `json:"middle_name" `
-	PhoneNumber       string    `json:"phone_number"`
 }
