@@ -6,8 +6,7 @@
 <body>
 	<h1>Real-Time Locator API</h1>
 	<p>This API is for a locator app that allows users to upload their location in real-time and see other users' locations in real-time. It is built using GoLang and runs on an AWS EC2 instance.</p>
-less
-Copy code
+
 <h2>Installation</h2>
 <ol>
 	<li>Clone this repository using the command <code>git clone https://github.com/CharlesMuchogo/locator/master.</code></li>
