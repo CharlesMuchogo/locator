@@ -25,9 +25,7 @@ func main() {
 	public.POST("/request_promotion", user.RequestPromotion)
 	public.GET("/promote_user", user.PromoteUser)
 
-
 	r.Run(":8001")
-	fmt.Println("Server started on port 8080")
+	fmt.Println("Server started on port 8001")
 
-	
 }
