@@ -2,19 +2,20 @@ package main
 
 import (
 	"fmt"
-	"time"
-
+	"github.com/gorilla/mux"
+	"log"
 	"main.go/location"
 	"main.go/user"
+	"main.go/websocket"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
 func main() {
+
 	//gin.SetMode(gin.ReleaseMode)
-	fmt.Printf("time now is %s \n", time.Now().Format("2006-01-02T15:04:05.999999Z"))
-	fmt.Printf("time now is %s \n", time.Now())
 	r := gin.Default()
 	public := r.Group("/api")
 	public.POST("/register", user.Signup)
@@ -25,7 +26,19 @@ func main() {
 	public.POST("/request_promotion", user.RequestPromotion)
 	public.GET("/promote_user", user.PromoteUser)
 
-	r.Run(":8001")
-	fmt.Println("Server started on port 8001")
+	go func() {
+		if err := r.Run(":8001"); err != nil {
+			log.Fatal("HTTP server failed to start: ", err)
+		}
+	}()
+
+	fmt.Println("HTTP server started on port 8001")
+	router := mux.NewRouter()
+	router.HandleFunc("/location", websocket.WsEndpoint)
+
+	if err := http.ListenAndServe(":9200", router); err != nil {
+		log.Fatal("WebSocket server failed to start: ", err)
+	}
+	fmt.Println("WS server started on port 9200")
 
 }

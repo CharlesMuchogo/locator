@@ -39,7 +39,6 @@ func UpdateProfile(c *gin.Context) {
 	}
 }
 
-
 func RequestPromotion(c *gin.Context) {
 	var requestDetails myStructs.LoginData
 	if err := c.ShouldBindJSON(&requestDetails); err != nil {
@@ -78,90 +77,87 @@ func PromoteUser(c *gin.Context) {
 }
 
 type DB struct {
-    *gorm.DB
+	*gorm.DB
 }
 
 func InitDB() (*DB, error) {
-    db, err := gorm.Open("postgres", databasehandler.GoDotEnvVariable("DATABASEURL"))
-    if err != nil {
-        return nil, err
-    }
-    db.AutoMigrate(&myStructs.User{})
-    return &DB{db}, nil
+	db, err := gorm.Open("postgres", databasehandler.GoDotEnvVariable("DATABASEURL"))
+	if err != nil {
+		return nil, err
+	}
+	db.AutoMigrate(&myStructs.User{})
+	return &DB{db}, nil
 }
 
 func encryptPassword(password string) (string, error) {
-    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-    if err != nil {
-        return "", err
-    }
-    return string(hashedPassword), nil
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
 }
 func Signup(c *gin.Context) {
-    db, err := InitDB()
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
-    defer db.Close()
+	db, err := InitDB()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer db.Close()
 
-    var user myStructs.User
-    if err := c.ShouldBindJSON(&user); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	var user myStructs.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-    // Assign a default profile photo if none was provided
-    if user.Profile_photo == "" {
-        user.Profile_photo = "https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png"
-    }
+	// Assign a default profile photo if none was provided
+	if user.Profile_photo == "" {
+		user.Profile_photo = "https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png"
+	}
 
-    hashedPassword, err := encryptPassword(user.Password)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+	hashedPassword, err := encryptPassword(user.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-    user.Password = hashedPassword
+	user.Password = hashedPassword
 
-    if err := db.Create(&user).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+	if err := db.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"user": user, "message":"signup success"})
+	c.JSON(http.StatusOK, gin.H{"user": user, "message": "signup success"})
 }
 
-
 func Login(c *gin.Context) {
-    db, err := InitDB()
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
-    defer db.Close()
+	db, err := InitDB()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer db.Close()
 
-    var loginUser myStructs.LoginUser
-    if err := c.ShouldBindJSON(&loginUser); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	var loginUser myStructs.LoginUser
+	if err := c.ShouldBindJSON(&loginUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-    fmt.Printf("userid is updated successfully %s  \n", loginUser)
+	fmt.Printf("userid is updated successfully %s  \n", loginUser)
 
+	var user myStructs.User
+	if err := db.Where("email = ?", loginUser.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+	fmt.Printf("userid is updated successfully %v  \n", user)
 
-    var user myStructs.User
-    if err := db.Where("email = ?", loginUser.Email).First(&user).Error; err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-        return
-    }
-    fmt.Printf("userid is updated successfully %s  \n", user)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
 
-
-    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password)); err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-        return
-    }
-
-    c.JSON(http.StatusOK,gin.H{"user": user, "message":"login success"})
+	c.JSON(http.StatusOK, gin.H{"user": user, "message": "login success"})
 }

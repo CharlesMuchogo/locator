@@ -4,6 +4,8 @@ go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.9.0
+	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/websocket v1.5.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.7
@@ -11,7 +13,6 @@ require (
 )
 
 require (
-	github.com/NaySoftware/go-fcm v0.0.0-20190516140123-808e978ddcd2 // indirect
 	github.com/bytedance/sonic v1.8.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
