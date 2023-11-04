@@ -1,44 +1,24 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gorilla/mux"
-	"log"
-	"main.go/location"
-	"main.go/user"
-	"main.go/websocket"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"log"
+	"main.go/database"
+	"main.go/routes"
 )
 
 func main() {
 
-	//gin.SetMode(gin.ReleaseMode)
-	r := gin.Default()
-	public := r.Group("/api")
-	public.POST("/register", user.Signup)
-	public.POST("/login", user.Login)
-	public.POST("/location", location.UpdateLocation)
-	public.GET("/location", location.GetLocation)
-	public.POST("/user", user.UpdateProfile)
-	public.POST("/request_promotion", user.RequestPromotion)
-	public.GET("/promote_user", user.PromoteUser)
-
-	go func() {
-		if err := r.Run(":8001"); err != nil {
-			log.Fatal("HTTP server failed to start: ", err)
-		}
-	}()
-
-	fmt.Println("HTTP server started on port 8001")
-	router := mux.NewRouter()
-	router.HandleFunc("/location", websocket.WsEndpoint)
-
-	if err := http.ListenAndServe(":9200", router); err != nil {
-		log.Fatal("WebSocket server failed to start: ", err)
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
 	}
-	fmt.Println("WS server started on port 9200")
+	// Initialize Database
+	connection_string := database.GetPostgresConnectionString()
+	database.Connect(connection_string)
+	database.Migrate()
+
+	router := routes.InitRouter()
+	router.Run(":8000")
 
 }

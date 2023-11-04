@@ -11,12 +11,11 @@ type User struct {
 	Firebase_id   string `json:"firebase_id,omitempty" `
 	Password      string `json:"-" `
 	Profile_photo string `json:"profile_photo" default:"https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png"`
-	Is_admin      bool   `json:"is_admin" `
+	Is_admin      bool   `json:"is_admin"`
 }
 
 type LoginUser struct {
-	Email string `json:"email" binding:"required"`
-
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"-" `
 }
 
